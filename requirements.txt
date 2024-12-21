@@ -1,0 +1,11 @@
+numpy
+Pillow
+PyYAML
+torch
+torchvision
+wandb
+opencv-python
+onnx
+onnxruntime
+pycuda
+tensorrt
