@@ -14,3 +14,10 @@ A large part of the code in this work comes from the repository that is associat
 }
 ```
 The changes I made to his code are my own, and are not associated with the authors or publishers of the original work.
+
+# Results Reproduction
+
+<p align="center">
+  <img src="assets/figure_8_Laurent_2024.png" alt="First Image" width="45%">
+  <img src="assets/model_evaluation_plot.png" alt="Second Image" width="45%">
+</p>
