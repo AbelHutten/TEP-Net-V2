@@ -59,6 +59,7 @@ for method in ["classification", "regression", "segmentation"]:
 plt.xlabel("Latency TensorRT AMP (ms/img)")
 plt.ylabel("Accuracy (IoU)")
 plt.xlim([0.2, 1.4])
+plt.ylim([0.96, 0.98])
 plt.legend()
 plt.grid()
 plt.show()
