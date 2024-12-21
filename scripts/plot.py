@@ -5,9 +5,9 @@ import pandas as pd
 plt.rcParams["axes.autolimit_mode"] = "round_numbers"
 
 # Data loading
-df = pd.read_csv("/home/abel/Documents/tepnet_v2/TEP-Net-V2/data/eval.csv")
-df = df[df["runtime"] == "tensorrt"]
-df = df.sort_values(by="latency")
+results_df = pd.read_csv("/home/abel/Documents/tepnet_v2/TEP-Net-V2/data/eval.csv")
+results_df = results_df[results_df["runtime"] == "tensorrt"]
+results_df = results_df.sort_values(by="latency")
 
 # Color and label position offset
 color_map = {
@@ -29,7 +29,7 @@ label_offset_map = {
 fig, ax = plt.subplots()
 
 for method in ["classification", "regression", "segmentation"]:
-    classification = df[df["method"] == method]
+    classification = results_df[results_df["method"] == method]
     classification_latency = list(classification["latency"])
     classification_iou = list(classification["iou"])
     classification_labels = [

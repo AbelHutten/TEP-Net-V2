@@ -9,7 +9,6 @@ os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 import torch
 import wandb
 import yaml
-
 from src.nn.loss import (
     BinaryDiceLoss,
     CrossEntropyLoss,
@@ -21,7 +20,7 @@ from src.utils.dataset import PathsDataset
 from src.utils.evaluate import IoUEvaluator
 from src.utils.trainer import train
 
-torch.use_deterministic_algorithms(True)
+torch.use_deterministic_algorithms(mode=True)
 
 
 def parse_arguments():
@@ -30,7 +29,7 @@ def parse_arguments():
         "method",
         type=str,
         choices=["regression", "classification", "segmentation"],
-        help="Method to use for the prediction head ('regression', 'classification' or 'segmentation').",
+        help="Method to use for the prediction head ('regression', 'classification' or 'segmentation').",  # noqa: E501
     )
     parser.add_argument(
         "backbone",
@@ -56,9 +55,12 @@ def main(args):
     logger = simple_logger(__name__, "info")
     base_path = os.path.dirname(__file__)
 
-    with open(os.path.join(base_path, "configs", "global.yaml")) as f:
+    with open(os.path.join(base_path, "configs", "global.yaml"), encoding="utf-8") as f:
         global_config = yaml.safe_load(f)
-    with open(os.path.join(base_path, "configs", f"{method}.yaml")) as f:
+    with open(
+        os.path.join(base_path, "configs", f"{method}.yaml"),
+        encoding="utf-8",
+    ) as f:
         method_config = yaml.safe_load(f)
     config = {
         **global_config,
@@ -68,7 +70,7 @@ def main(args):
     }
 
     set_seeds(config["seed"])  # set random state
-    with open(config["annotations_path"]) as json_file:
+    with open(config["annotations_path"], encoding="utf-8") as json_file:
         indices = list(range(len(json.load(json_file).keys())))
     random.shuffle(indices)
     proportions = (config["train_prop"], config["val_prop"], config["test_prop"])
@@ -154,7 +156,7 @@ def main(args):
     )
     save_path = os.path.join(base_path, "weights", wandb.run.name)
     os.makedirs(save_path, exist_ok=True)
-    with open(os.path.join(save_path, "config.yaml"), "w") as f:
+    with open(os.path.join(save_path, "config.yaml"), "w", encoding="utf-8") as f:
         yaml.dump(config, f)
 
     if method == "regression":
