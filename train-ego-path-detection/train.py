@@ -47,12 +47,19 @@ def parse_arguments():
         + [f"cuda:{x}" for x in range(torch.cuda.device_count())],
         help="Device to use ('cpu', 'cuda', 'cuda:x' or 'mps').",
     )
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default=None,
+        help="Path to the checkpoint file to load. None to train a new model.",
+    )
     return parser.parse_args()
 
 
 def main(args):
     method = args.method
     device = torch.device(args.device)
+    checkpoint = args.checkpoint
     logger = simple_logger(__name__, "info")
     base_path = os.path.dirname(__file__)
 
@@ -149,6 +156,9 @@ def main(args):
         ).to(device)
     else:
         raise ValueError
+
+    if checkpoint is not None:
+        model.load_state_dict(torch.load(checkpoint))
 
     wandb.init(
         project="train-ego-path-detection",
