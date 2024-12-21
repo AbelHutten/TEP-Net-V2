@@ -12,6 +12,7 @@ import yaml
 from src.nn.loss import (
     BinaryDiceLoss,
     CrossEntropyLoss,
+    GIoULoss,
     TrainEgoPathRegressionLoss,
 )
 from src.nn.model import ClassificationNet, RegressionNet, SegmentationNet
@@ -160,15 +161,21 @@ def main(args):
         yaml.dump(config, f)
 
     if method == "regression":
-        criterion = TrainEgoPathRegressionLoss(
-            ylimit_loss_weight=config["ylimit_loss_weight"],
-            perspective_weight_limit=train_dataset.get_perspective_weight_limit(
-                percentile=config["perspective_weight_limit_percentile"],
-                logger=logger,
+        if config["loss_function"] == "TrainEgoPathRegressionLoss":
+            criterion = TrainEgoPathRegressionLoss(
+                ylimit_loss_weight=config["ylimit_loss_weight"],
+                perspective_weight_limit=train_dataset.get_perspective_weight_limit(
+                    percentile=config["perspective_weight_limit_percentile"],
+                    logger=logger,
+                )
+                if config["perspective_weight_limit_percentile"] is not None
+                else None,
             )
-            if config["perspective_weight_limit_percentile"] is not None
-            else None,
-        )
+        elif config["loss_function"] == "GIoULoss":
+            criterion = GIoULoss()
+        else:
+            msg = "Only TrainEgoPathRegressionLoss and GIoULoss have been implemented."
+            raise NotImplementedError(msg)
         if config["perspective_weight_limit_percentile"] is not None:
             set_seeds(config["seed"])  # reset random state
     elif method == "classification":

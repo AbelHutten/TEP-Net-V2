@@ -9,3 +9,6 @@ perspective_weight_limit_percentile: 95  # percentile for the calculation of the
 anchors: 64  # number of horizontal anchors in the input image
 pool_channels: 8  # number of output channels of the pooling layer
 fc_hidden_size: 2048  # number of units in the hidden layer of the fully connected part
+
+# loss configuration
+loss_function: TrainEgoPathRegressionLoss # Either TrainEgoPathRegressionLoss (for the loss specified in the paper) or GIoULoss (for the Generalized IoU Loss)
