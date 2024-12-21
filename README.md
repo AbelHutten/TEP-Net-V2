@@ -1,5 +1,5 @@
 # TEP-Net-V2
-Experiments with [TEP-Net (Laurent 2024)](arxiv.org/abs/2403.13094), with the goal of improving performance through architecture enhancements.
+Experiments with [TEP-Net (Laurent 2024)](arxiv.org/abs/2403.13094), with the goal of improving performance through architectural enhancements.
 
 A large part of the code in this work comes from the repository that is associated with the publication, [train-ego-path-detection](https://github.com/irtrailenium/train-ego-path-detection), as this work is a continuation of that work. Please star [train-ego-path-detection](https://github.com/irtrailenium/train-ego-path-detection), and cite the original paper from Thomas Laurent, if you find his work useful:
 
