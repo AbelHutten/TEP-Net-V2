@@ -3,11 +3,10 @@ import timeit
 import numpy as np
 import torch
 from PIL import Image
-from torch.utils.benchmark import Timer
-
 from src.utils.common import set_seeds
 from src.utils.interface import Detector
 from src.utils.postprocessing import rails_to_mask
+from torch.utils.benchmark import Timer
 
 
 def compute_iou(input, target):
@@ -41,12 +40,10 @@ class IoUEvaluator:
             model_path (str): Path to the trained model directory (containing config.yaml and best.pt).
             runtime (str): Runtime to use for model inference ("pytorch" or "tensorrt").
             device (str): Device to use for model inference ("cpu", "cuda", "cuda:x" or "mps").
-        """
+        """  # noqa: DOC501
         self.dataset = dataset
         self.runtime = runtime
-        if runtime == "pytorch":
-            self.detector = Detector(model_path, None, runtime, device)
-        elif runtime == "tensorrt":
+        if runtime == "pytorch" or runtime == "tensorrt":
             self.detector = Detector(model_path, None, runtime, device)
         else:
             raise ValueError
@@ -73,11 +70,9 @@ class LatencyEvaluator:
             model_path (str): Path to the trained model directory (containing config.yaml and best.pt).
             runtime (str): Runtime environment to use for model inference ("pytorch" or "tensorrt").
             device (str): Device to use for model inference ("cpu", "cuda", "cuda:x" or "mps").
-        """        
+        """  # noqa: DOC501
         self.runtime = runtime
-        if runtime == "pytorch":
-            self.detector = Detector(model_path, None, runtime, device)
-        elif runtime == "tensorrt":
+        if runtime == "pytorch" or runtime == "tensorrt":
             self.detector = Detector(model_path, None, runtime, device)
         else:
             raise ValueError
@@ -113,5 +108,6 @@ class LatencyEvaluator:
     def evaluate(self, runs=1000):
         if self.runtime == "pytorch":
             return self.evaluate_pytorch(runs)
-        elif self.runtime == "tensorrt":
+        if self.runtime == "tensorrt":
             return self.evaluate_tensorrt(runs)
+        raise NotImplementedError
