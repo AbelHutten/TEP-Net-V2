@@ -1,4 +1,8 @@
 ruff.toml
+train_resized/
+rs19_egopath.json
+wandb/
+weights/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

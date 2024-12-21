@@ -72,7 +72,7 @@ class GIoULoss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, prediction, target) -> torch.Tensor:
+    def forward(self, prediction, target):
         """
         Computes the Generalized IoU loss between predicted and target rail positions,
         incorporating the y-limit as the vertical bound of the bounding box.
@@ -88,6 +88,13 @@ class GIoULoss(nn.Module):
         traj_prediction = prediction[:, :-1].view_as(traj_target)
         ylim_prediction = prediction[:, -1]
 
+        # Mask for anchors within the y-limit
+        ylim_target_idx = (ylim_target * (traj_target.size(2) - 1)).long()  # (B,)
+        range_matrix = torch.arange(
+            traj_target.size(2), device=ylim_target_idx.device
+        ).expand(traj_target.size(0), -1)  # (B, H)
+        loss_mask = (range_matrix <= ylim_target_idx.unsqueeze(1)).float()  # (B, H)
+
         # Calculate the intersection
         left_intersection = torch.maximum(
             traj_prediction[:, 0, :], traj_target[:, 0, :]
@@ -95,21 +102,24 @@ class GIoULoss(nn.Module):
         right_intersection = torch.minimum(
             traj_prediction[:, 1, :], traj_target[:, 1, :]
         )
-        top_intersection = torch.minimum(
+        intersection_width = torch.clamp(right_intersection - left_intersection, min=0)
+
+        # Only consider intersections within the y-limit
+        intersection_height = torch.minimum(
             ylim_prediction.unsqueeze(1), ylim_target.unsqueeze(1)
         )  # (B, 1)
-        intersection = (
-            torch.clamp(right_intersection - left_intersection, min=0)
-            * top_intersection
-        )
+        intersection = (intersection_width * intersection_height * loss_mask).sum(
+            dim=1
+        )  # (B,)
 
         # Calculate the union
         left_union = torch.minimum(traj_prediction[:, 0, :], traj_target[:, 0, :])
         right_union = torch.maximum(traj_prediction[:, 1, :], traj_target[:, 1, :])
-        top_union = torch.maximum(
+        union_width = torch.clamp(right_union - left_union, min=0)
+        union_height = torch.maximum(
             ylim_prediction.unsqueeze(1), ylim_target.unsqueeze(1)
         )  # (B, 1)
-        union = torch.clamp(right_union - left_union, min=0) * top_union
+        union = (union_width * union_height * loss_mask).sum(dim=1)  # (B,)
 
         # IoU calculation
         iou = intersection / (union + 1e-6)
@@ -117,12 +127,13 @@ class GIoULoss(nn.Module):
         # Calculate the smallest enclosing box
         enclosing_left = torch.minimum(traj_prediction[:, 0, :], traj_target[:, 0, :])
         enclosing_right = torch.maximum(traj_prediction[:, 1, :], traj_target[:, 1, :])
-        enclosing_top = torch.maximum(
+        enclosing_width = torch.clamp(enclosing_right - enclosing_left, min=0)
+        enclosing_height = torch.maximum(
             ylim_prediction.unsqueeze(1), ylim_target.unsqueeze(1)
         )
-        enclosing_area = (
-            torch.clamp(enclosing_right - enclosing_left, min=0) * enclosing_top
-        )
+        enclosing_area = (enclosing_width * enclosing_height * loss_mask).sum(
+            dim=1
+        )  # (B,)
 
         # Generalized IoU calculation
         giou = iou - ((enclosing_area - union) / (enclosing_area + 1e-6))
@@ -140,7 +151,7 @@ if __name__ == "__main__":
         [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
         [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7]],
     ])
-    ylim_target = torch.tensor([0.8, 0.9])
+    ylim_target = torch.tensor([0.2, 0.9])
     target = (traj_target, ylim_target)
 
     traj_prediction = torch.tensor([
