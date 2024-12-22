@@ -14,6 +14,7 @@ from src.nn.loss import (
     CrossEntropyLoss,
     GIoULoss,
     IoULoss,
+    Mean1DGIoULoss,
     TrainEgoPathRegressionLoss,
 )
 from src.nn.model import ClassificationNet, RegressionNet, SegmentationNet
@@ -186,8 +187,12 @@ def main(args):
             criterion = GIoULoss()
         elif config["loss_function"] == "IoULoss":
             criterion = IoULoss()
+        elif config["loss_function"] == "Mean1DGIoULoss":
+            criterion = Mean1DGIoULoss()
         else:
-            msg = "Only TrainEgoPathRegressionLoss and GIoULoss have been implemented."
+            msg = (
+                f"The loss function {config['loss_function']} has not been implemented."
+            )
             raise NotImplementedError(msg)
         if config["perspective_weight_limit_percentile"] is not None:
             set_seeds(config["seed"])  # reset random state

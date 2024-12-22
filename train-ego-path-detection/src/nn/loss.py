@@ -79,6 +79,7 @@ class IoULoss(nn.Module):
         traj_target, ylim_target = target
         traj_prediction = prediction[:, :-1].view_as(traj_target)
         ylim_prediction = prediction[:, -1]
+        ylim_prediction = torch.sigmoid(ylim_prediction)
         ylim_target_idx = ylim_target * (traj_target.size(2) - 1)  # (B,)
         ylim_prediction_idx = ylim_prediction * (traj_target.size(2) - 1)  # (B,)
         left_rail_max = torch.maximum(traj_prediction[:, 0, :], traj_target[:, 0, :])
@@ -119,6 +120,39 @@ class GIoULoss(nn.Module):
         traj_prediction = prediction[:, :-1].view_as(traj_target)
         ylim_prediction = prediction[:, -1]
         raise NotImplementedError
+
+
+class Mean1DGIoULoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.batchaveraged_smae = nn.SmoothL1Loss(reduction="mean", beta=0.015)
+        self.ylim_loss_weight = 0.5
+
+    def forward(self, prediction, target):
+        traj_target, ylim_target = target
+        traj_prediction = prediction[:, :-1].view_as(traj_target)
+        ylim_prediction = prediction[:, -1]
+        ylim_target_idx = ylim_target * (traj_target.size(2) - 1)  # (B,)
+        range_matrix = torch.arange(
+            traj_target.size(2), device=ylim_target_idx.device
+        ).expand(traj_target.size(0), -1)  # (B, H)
+        loss_mask = range_matrix <= ylim_target_idx.unsqueeze(1).float()  # (B, H)
+        a2 = traj_prediction[:, 1, :]
+        b2 = traj_target[:, 1, :]
+        a1 = traj_prediction[:, 0, :]
+        b1 = traj_target[:, 0, :]
+        intersection = torch.clamp(torch.minimum(a2, b2) - torch.maximum(a1, b1), min=0)
+        union = (a2 - a1) + (b2 - b1) - intersection
+        iou = intersection / union
+        c = torch.maximum(a2, b2) - torch.minimum(a1, b1)
+        giou = iou - (c - union) / (c + 1e-6)
+        giou = giou * loss_mask
+        return (
+            1
+            - giou.mean()
+            + self.ylim_loss_weight
+            * self.batchaveraged_smae(torch.sigmoid(ylim_prediction), ylim_target)
+        )
 
 
 if __name__ == "__main__":

@@ -74,7 +74,8 @@ def train(
         train_loss = train_epoch(model, criterion, device, train_loader, optimizer)
         val_loss = 0
         if val_loader is not None:
-            # each validation epoch is unique due to data augmentation, so we can average multiple
+            # each validation epoch is unique due to data augmentation, so
+            # we can average multiple
             for _ in range(val_iterations):
                 val_loss += val_epoch(model, criterion, device, val_loader)
             val_loss /= val_iterations
