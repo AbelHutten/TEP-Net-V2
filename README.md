@@ -16,7 +16,9 @@ A large part of the code in this work comes from the repository that is associat
 The changes I made to his code are my own, and are not associated with the authors or publishers of the original work.
 
 # Results Reproduction
+On the left: a reproduction of figure 8 from Laurent 2024. Results obtained on an NVIDIA Quadro RTX 6000 GPU, with PyTorch v2.2.1 and TensorRT v8.6.1 (CUDA v12.1). Reproduced to simplify comparison. Please refer to and cite the original paper when appropriate. On the right: Results of rerunning the training and evaluation. Results obtained on an NVIDIA RTX 4090 GPU with PyTorch 2.5.0 and TensorRT v10.7.0 (CUDA 12.4).
 <p align="center">
   <img src="assets/figure_8_Laurent_2024.png" alt="First Image" width="45%">
   <img src="assets/model_evaluation_plot.png" alt="Second Image" width="45%">
 </p>
+
