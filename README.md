@@ -16,26 +16,7 @@ A large part of the code in this work comes from the repository that is associat
 The changes I made to his code are my own, and are not associated with the authors or publishers of the original work.
 
 # Results Reproduction
-<table style="table-layout: fixed; width: 100%;">
-  <tr>
-    <!-- First cell -->
-    <td style="width: 50%; text-align: center; vertical-align: top;">
-      <img src="assets/figure_8_Laurent_2024.png" alt="First Image" style="width:100%;">
-      <br>
-      <em>
-        A reproduction of figure 8 from Laurent 2024. Results obtained on an NVIDIA Quadro RTX 6000 GPU, 
-        with PyTorch v2.2.1 and TensorRT v8.6.1 (CUDA v12.1). Reproduced to simplify comparison. 
-        Refer to Laurent 2024 for details and proper citation..
-      </em>
-    </td>
-    <!-- Second cell -->
-    <td style="width: 50%; text-align: center; vertical-align: top;">
-      <img src="assets/model_evaluation_plot.png" alt="Second Image" style="width:100%;">
-      <br>
-      <em>
-        Results of rerunning the training and evaluation. Results obtained on an NVIDIA RTX 4090 GPU 
-        with PyTorch 2.5.0 and TensorRT v10.7.0 (CUDA 12.4).
-      </em>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="assets/figure_8_Laurent_2024.png" alt="First Image" width="45%">
+  <img src="assets/model_evaluation_plot.png" alt="Second Image" width="45%">
+</p>
