@@ -68,101 +68,88 @@ class BinaryDiceLoss(nn.Module):
         return 1 - scores.mean()  # ()
 
 
+class IoULoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, prediction, target):
+        """
+        Computes the IoU loss between predicted and target rail positions.
+        """
+        traj_target, ylim_target = target
+        traj_prediction = prediction[:, :-1].view_as(traj_target)
+        ylim_prediction = prediction[:, -1]
+        ylim_target_idx = ylim_target * (traj_target.size(2) - 1)  # (B,)
+        ylim_prediction_idx = ylim_prediction * (traj_target.size(2) - 1)  # (B,)
+        left_rail_max = torch.maximum(traj_prediction[:, 0, :], traj_target[:, 0, :])
+        right_rail_min = torch.minimum(traj_prediction[:, 1, :], traj_target[:, 1, :])
+        batch_size, _, anchor_count = traj_prediction.shape
+        range_matrix = (
+            torch.arange(anchor_count, device=ylim_prediction.device)
+            .unsqueeze(0)
+            .expand(batch_size, -1)
+        )
+        prediction_mask = range_matrix < ylim_prediction_idx.unsqueeze(1)
+        target_mask = range_matrix < ylim_target_idx.unsqueeze(1)
+        min_mask = prediction_mask * target_mask
+        intersection = (
+            torch.clamp((right_rail_min - left_rail_max), min=0) * min_mask
+        ).sum(dim=1)
+        pred_area = (
+            torch.clamp((traj_prediction[:, 1, :] - traj_prediction[:, 0, :]), min=0)
+            * prediction_mask
+        ).sum(dim=1)
+        target_area = (
+            torch.clamp((traj_target[:, 1, :] - traj_target[:, 0, :]), min=0)
+            * target_mask
+        ).sum(dim=1)
+        union = pred_area + target_area - intersection
+        return 1 - (intersection / union).mean()
+
+
 class GIoULoss(nn.Module):
     def __init__(self):
         super().__init__()
 
     def forward(self, prediction, target):
         """
-        Computes the Generalized IoU loss between predicted and target rail positions,
-        incorporating the y-limit as the vertical bound of the bounding box.
-
-        Args:
-            prediction (torch.Tensor): Predicted values containing trajectory and ylim.
-            target (tuple): Tuple containing (traj_target, ylim_target).
-
-        Returns:
-            torch.Tensor: Scalar loss value.
+        Computes the Generalized IoU loss between predicted and target rail positions.
         """
         traj_target, ylim_target = target
         traj_prediction = prediction[:, :-1].view_as(traj_target)
         ylim_prediction = prediction[:, -1]
-
-        # Mask for anchors within the y-limit
-        ylim_target_idx = (ylim_target * (traj_target.size(2) - 1)).long()  # (B,)
-        range_matrix = torch.arange(
-            traj_target.size(2), device=ylim_target_idx.device
-        ).expand(traj_target.size(0), -1)  # (B, H)
-        loss_mask = (range_matrix <= ylim_target_idx.unsqueeze(1)).float()  # (B, H)
-
-        # Calculate the intersection
-        left_intersection = torch.maximum(
-            traj_prediction[:, 0, :], traj_target[:, 0, :]
-        )
-        right_intersection = torch.minimum(
-            traj_prediction[:, 1, :], traj_target[:, 1, :]
-        )
-        intersection_width = torch.clamp(right_intersection - left_intersection, min=0)
-
-        # Only consider intersections within the y-limit
-        intersection_height = torch.minimum(
-            ylim_prediction.unsqueeze(1), ylim_target.unsqueeze(1)
-        )  # (B, 1)
-        intersection = (intersection_width * intersection_height * loss_mask).sum(
-            dim=1
-        )  # (B,)
-
-        # Calculate the union
-        left_union = torch.minimum(traj_prediction[:, 0, :], traj_target[:, 0, :])
-        right_union = torch.maximum(traj_prediction[:, 1, :], traj_target[:, 1, :])
-        union_width = torch.clamp(right_union - left_union, min=0)
-        union_height = torch.maximum(
-            ylim_prediction.unsqueeze(1), ylim_target.unsqueeze(1)
-        )  # (B, 1)
-        union = (union_width * union_height * loss_mask).sum(dim=1)  # (B,)
-
-        # IoU calculation
-        iou = intersection / (union + 1e-6)
-
-        # Calculate the smallest enclosing box
-        enclosing_left = torch.minimum(traj_prediction[:, 0, :], traj_target[:, 0, :])
-        enclosing_right = torch.maximum(traj_prediction[:, 1, :], traj_target[:, 1, :])
-        enclosing_width = torch.clamp(enclosing_right - enclosing_left, min=0)
-        enclosing_height = torch.maximum(
-            ylim_prediction.unsqueeze(1), ylim_target.unsqueeze(1)
-        )
-        enclosing_area = (enclosing_width * enclosing_height * loss_mask).sum(
-            dim=1
-        )  # (B,)
-
-        # Generalized IoU calculation
-        giou = iou - ((enclosing_area - union) / (enclosing_area + 1e-6))
-
-        # GIoU loss
-        giou_loss = 1 - giou.mean()
-
-        return giou_loss
+        raise NotImplementedError
 
 
-# Example usage
 if __name__ == "__main__":
-    # Example tensors with batch size B=2, 2 rails, and H=3 anchors
-    traj_target = torch.tensor([
-        [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
-        [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7]],
-    ])
-    ylim_target = torch.tensor([0.2, 0.9])
-    target = (traj_target, ylim_target)
+    ylim_target = torch.tensor([0.5])
+    ylim_prediction = torch.tensor([0.7])
+    traj_target = torch.tensor([[0.7, 1]]).unsqueeze(2).expand(1, 2, 10)
+    traj_prediction = torch.tensor([[0, 0.6]]).unsqueeze(2).expand(1, 2, 10)
 
-    traj_prediction = torch.tensor([
-        [[0.15, 0.25, 0.35], [0.45, 0.55, 0.65]],
-        [[0.25, 0.35, 0.45], [0.55, 0.65, 0.75]],
-    ])
-    ylim_prediction = torch.tensor([0.85, 0.95])
-    prediction = torch.cat(
-        [traj_prediction.view(2, -1), ylim_prediction.unsqueeze(1)], dim=1
+    ylim_target_idx = ylim_target * (traj_target.size(2) - 1)  # (B,)
+    ylim_prediction_idx = ylim_prediction * (traj_target.size(2) - 1)  # (B,)
+    left_rail_max = torch.maximum(traj_prediction[:, 0, :], traj_target[:, 0, :])
+    right_rail_min = torch.minimum(traj_prediction[:, 1, :], traj_target[:, 1, :])
+    batch_size, _, anchor_count = traj_prediction.shape
+    range_matrix = (
+        torch.arange(anchor_count, device=ylim_prediction.device)
+        .unsqueeze(0)
+        .expand(batch_size, -1)
     )
-
-    criterion = GIoULoss()
-    loss = criterion(prediction, target)
-    print("GIoU Loss:", loss.item())
+    prediction_mask = range_matrix < ylim_prediction_idx.unsqueeze(1)
+    target_mask = range_matrix < ylim_target_idx.unsqueeze(1)
+    min_mask = prediction_mask * target_mask
+    intersection = (
+        torch.clamp((right_rail_min - left_rail_max), min=0) * min_mask
+    ).sum(dim=1)
+    pred_area = (
+        torch.clamp((traj_prediction[:, 1, :] - traj_prediction[:, 0, :]), min=0)
+        * prediction_mask
+    ).sum(dim=1)
+    target_area = (
+        torch.clamp((traj_target[:, 1, :] - traj_target[:, 0, :]), min=0) * target_mask
+    ).sum(dim=1)
+    union = pred_area + target_area - intersection
+    print(intersection / union)
+    print(0.1 / 0.62)

@@ -13,6 +13,7 @@ from src.nn.loss import (
     BinaryDiceLoss,
     CrossEntropyLoss,
     GIoULoss,
+    IoULoss,
     TrainEgoPathRegressionLoss,
 )
 from src.nn.model import ClassificationNet, RegressionNet, SegmentationNet
@@ -158,7 +159,7 @@ def main(args):
         raise ValueError
 
     if checkpoint is not None:
-        model.load_state_dict(torch.load(checkpoint))
+        model.load_state_dict(torch.load(checkpoint, weights_only=False))
 
     wandb.init(
         project="train-ego-path-detection",
@@ -183,6 +184,8 @@ def main(args):
             )
         elif config["loss_function"] == "GIoULoss":
             criterion = GIoULoss()
+        elif config["loss_function"] == "IoULoss":
+            criterion = IoULoss()
         else:
             msg = "Only TrainEgoPathRegressionLoss and GIoULoss have been implemented."
             raise NotImplementedError(msg)
