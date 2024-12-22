@@ -3,6 +3,7 @@ train_resized/
 rs19_egopath.json
 wandb/
 weights/
+*.mp4
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

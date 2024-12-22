@@ -2,7 +2,6 @@ import os
 import time
 
 import torch
-
 import wandb
 
 
@@ -81,14 +80,20 @@ def train(
             val_loss /= val_iterations
         if scheduler is not None:
             scheduler.step()
-        if epoch >= epochs * 0.9 and val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save(model.state_dict(), os.path.join(save_path, "best.pt"))
+        if val_loss < best_val_loss:
+            if epoch >= epochs * 0.9:
+                best_val_loss = val_loss
+                torch.save(model.state_dict(), os.path.join(save_path, "best.pt"))
+            else:
+                torch.save(
+                    model.state_dict(),
+                    os.path.join(save_path, "best_before_last_10_percent.pt"),
+                )
         logger.info(
             f"{time.strftime('%Y-%m-%d %H:%M:%S')}"
-            + f" | EPOCH {(epoch+1):0{len(str(epochs))}}/{epochs}"
-            + f" | TRAIN LOSS: {train_loss:.5f}"
-            + f" | VAL LOSS: {val_loss:.5f}"
+            f" | EPOCH {(epoch + 1):0{len(str(epochs))}}/{epochs}"
+            f" | TRAIN LOSS: {train_loss:.5f}"
+            f" | VAL LOSS: {val_loss:.5f}"
         )
         wandb.log({"train_loss": train_loss, "val_loss": val_loss})
     wandb.log({"best_val_loss": best_val_loss})
