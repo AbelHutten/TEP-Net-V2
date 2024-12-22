@@ -25,7 +25,7 @@ The changes I made to his code are my own, and are not associated with the autho
       <em>
         A reproduction of figure 8 from Laurent 2024. Results obtained on an NVIDIA Quadro RTX 6000 GPU, 
         with PyTorch v2.2.1 and TensorRT v8.6.1 (CUDA v12.1). Reproduced to simplify comparison. 
-        Please refer to and cite the original paper when appropriate.
+        Refer to Laurent 2024 for details and proper citation..
       </em>
     </td>
     <!-- Second cell -->
