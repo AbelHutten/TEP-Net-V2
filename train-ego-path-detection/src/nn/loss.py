@@ -108,20 +108,6 @@ class IoULoss(nn.Module):
         return 1 - (intersection / union).mean()
 
 
-class GIoULoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, prediction, target):
-        """
-        Computes the Generalized IoU loss between predicted and target rail positions.
-        """
-        traj_target, ylim_target = target
-        traj_prediction = prediction[:, :-1].view_as(traj_target)
-        ylim_prediction = prediction[:, -1]
-        raise NotImplementedError
-
-
 class Mean1DGIoULoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -153,37 +139,3 @@ class Mean1DGIoULoss(nn.Module):
             + self.ylim_loss_weight
             * self.batchaveraged_smae(torch.sigmoid(ylim_prediction), ylim_target)
         )
-
-
-if __name__ == "__main__":
-    ylim_target = torch.tensor([0.5])
-    ylim_prediction = torch.tensor([0.7])
-    traj_target = torch.tensor([[0.7, 1]]).unsqueeze(2).expand(1, 2, 10)
-    traj_prediction = torch.tensor([[0, 0.6]]).unsqueeze(2).expand(1, 2, 10)
-
-    ylim_target_idx = ylim_target * (traj_target.size(2) - 1)  # (B,)
-    ylim_prediction_idx = ylim_prediction * (traj_target.size(2) - 1)  # (B,)
-    left_rail_max = torch.maximum(traj_prediction[:, 0, :], traj_target[:, 0, :])
-    right_rail_min = torch.minimum(traj_prediction[:, 1, :], traj_target[:, 1, :])
-    batch_size, _, anchor_count = traj_prediction.shape
-    range_matrix = (
-        torch.arange(anchor_count, device=ylim_prediction.device)
-        .unsqueeze(0)
-        .expand(batch_size, -1)
-    )
-    prediction_mask = range_matrix < ylim_prediction_idx.unsqueeze(1)
-    target_mask = range_matrix < ylim_target_idx.unsqueeze(1)
-    min_mask = prediction_mask * target_mask
-    intersection = (
-        torch.clamp((right_rail_min - left_rail_max), min=0) * min_mask
-    ).sum(dim=1)
-    pred_area = (
-        torch.clamp((traj_prediction[:, 1, :] - traj_prediction[:, 0, :]), min=0)
-        * prediction_mask
-    ).sum(dim=1)
-    target_area = (
-        torch.clamp((traj_target[:, 1, :] - traj_target[:, 0, :]), min=0) * target_mask
-    ).sum(dim=1)
-    union = pred_area + target_area - intersection
-    print(intersection / union)
-    print(0.1 / 0.62)
