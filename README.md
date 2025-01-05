@@ -27,4 +27,4 @@ results were reproduced on different hardware. Notable here is the fact that the
 
 # Prediction Confidence
 
-![Demo](assets/classification_with_and_without_confidence.gif)
+<a href="https://drive.google.com/uc?export=view&id=1OxDeiqFMC7Jzd1AVL8RYVVCmutM-60KQ"><img src="https://drive.google.com/uc?export=view&id=1OxDeiqFMC7Jzd1AVL8RYVVCmutM-60KQ" style="width: 650px; max-width: 100%; height: auto" title="Click to enlarge picture" />
