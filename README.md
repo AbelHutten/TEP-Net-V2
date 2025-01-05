@@ -27,4 +27,4 @@ results were reproduced on different hardware. Notable here is the fact that the
 
 # Prediction Confidence
 
-<a href="https://drive.google.com/uc?export=view&id=1OxDeiqFMC7Jzd1AVL8RYVVCmutM-60KQ"><img src="https://drive.google.com/uc?export=view&id=1OxDeiqFMC7Jzd1AVL8RYVVCmutM-60KQ" style="width: 650px; max-width: 100%; height: auto" title="Click to enlarge picture" />
+![](https://github.com/AbelHutten/TEP-Net-V2/blob/main/assets/classification_confidence_demo.gif)
