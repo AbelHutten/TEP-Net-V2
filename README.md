@@ -24,3 +24,7 @@ On the left: a reproduction of figure 8 from Laurent 2024. Results obtained on a
 
 The major difference between the results in figure 8 of Laurent 2024 and the reproduced results is the latency of the different models. This is to be expected, since the 
 results were reproduced on different hardware. Notable here is the fact that the order of the models in terms of latency is not preserved.
+
+# Prediction Confidence
+
+![Demo](assets/classification_with_and_without_confidence.gif)
