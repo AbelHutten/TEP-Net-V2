@@ -33,7 +33,7 @@ The classification model discretizes the y-axis into anchors and the x-axis into
 ```math
 C_h = 1 - \frac{\sum_{i=1}^{W+1}p_i\log(p_i)}{\log(W+1)}
 ```
-Where $W + 1$ is the number of horizontal bins, plus one bin corresponding to no rail, and $p_i$ is the probability the model assigns to that bin. We average the confidence of the two rails for each anchor.
+Where $W + 1$ is the number of horizontal bins, plus one bin corresponding to no rail, and $p_i$ is the probability the model assigns to the $i^{th}$ bin. We average the confidence of the two rails for each anchor.
 
 The video below demonstrates this confidence. On the left, the unaltered classification model output. On the right, this same output, but with the detection color corresponding to the confidence. Pure green corresponds to a confidence of 1, pure red to a confidence of 0, and intermediate values falling in between on the color gradient.
 
