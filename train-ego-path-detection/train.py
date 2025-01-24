@@ -12,7 +12,6 @@ import yaml
 from src.nn.loss import (
     BinaryDiceLoss,
     CrossEntropyLoss,
-    GIoULoss,
     IoULoss,
     Mean1DGIoULoss,
     TrainEgoPathRegressionLoss,
@@ -183,8 +182,6 @@ def main(args):
                 if config["perspective_weight_limit_percentile"] is not None
                 else None,
             )
-        elif config["loss_function"] == "GIoULoss":
-            criterion = GIoULoss()
         elif config["loss_function"] == "IoULoss":
             criterion = IoULoss()
         elif config["loss_function"] == "Mean1DGIoULoss":

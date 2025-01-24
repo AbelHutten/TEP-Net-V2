@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-
 from src.utils.common import simple_logger
 from src.utils.interface import Detector
 from src.utils.visualization import draw_egopath
@@ -117,8 +116,8 @@ def main(args):
         current_frame = 0
         logger.info(
             f"\nFRAMES: {total_frames}"
-            + f" | RESOLUTION: {frame_width}x{frame_height}"
-            + f" | FPS: {fps}"
+            f" | RESOLUTION: {frame_width}x{frame_height}"
+            f" | FPS: {fps}"
         )
         progress_bar = simple_logger(f"{__name__}_progress", "info", terminator="\r")
         while current_frame < max_frames:
@@ -134,7 +133,7 @@ def main(args):
             current_frame += 1
             progress_bar.info(
                 f"Processed {current_frame:0{len(str(max_frames))}}/{max_frames} frames"
-                + f" ({current_frame/max_frames*100:.2f}%)"
+                f" ({current_frame / max_frames * 100:.2f}%)"
             )
         cap.release()
         out.release()

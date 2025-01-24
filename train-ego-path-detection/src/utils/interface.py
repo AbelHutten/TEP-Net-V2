@@ -109,9 +109,9 @@ class Detector:
         with open(os.path.join(self.model_path, "best.trt"), "rb") as f:
             engine = runtime.deserialize_cuda_engine(f.read())
         exectx = engine.create_execution_context()
-        shapes = tuple(
-            [tuple(engine.get_binding_shape(i)) for i in range(engine.num_bindings)]
-        )
+        shapes = tuple([
+            tuple(engine.get_binding_shape(i)) for i in range(engine.num_bindings)
+        ])
         bindings = [
             self.cuda.mem_alloc(np.prod(shape).item() * np.dtype(np.float32).itemsize)
             for shape in shapes
@@ -145,12 +145,10 @@ class Detector:
         return pred.cpu().numpy()
 
     def infer_model_tensorrt(self, img):
-        tensor = transforms.Compose(
-            [
-                to_scaled_tensor,
-                transforms.Resize(self.config["input_shape"][1:][::-1]),
-            ]
-        )(img).contiguous()
+        tensor = transforms.Compose([
+            to_scaled_tensor,
+            transforms.Resize(self.config["input_shape"][1:][::-1]),
+        ])(img).contiguous()
         tensor = tensor.numpy()  # convert to numpy
         self.cuda.memcpy_htod(self.bindings[0], tensor)  # copy input to GPU
         self.exectx.execute_v2(self.bindings)  # infer model
@@ -168,7 +166,7 @@ class Detector:
             list or PIL.Image.Image: Train ego-path detection result, whose type depends on the method used:
                 - Classification/Regression: List containing the left and right rails lists of rails point coordinates (x, y).
                 - Segmentation: PIL.Image.Image representing the binary mask of detected region.
-        """     
+        """
         original_shape = img.size
         crop_coords = self.get_crop_coords()
         if crop_coords is not None:

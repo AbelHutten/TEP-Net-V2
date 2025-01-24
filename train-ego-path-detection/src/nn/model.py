@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 
 import torch.nn as nn
@@ -9,20 +11,21 @@ from .decoder import UNetDecoder
 class ClassificationNet(nn.Module):
     def __init__(
         self,
-        backbone,
-        input_shape,
-        anchors,
-        classes,
-        pool_channels,
-        fc_hidden_size,
-        pretrained=False,
+        backbone: str,
+        input_shape: tuple[int, int, int],
+        anchors: int,
+        classes: int,
+        pool_channels: int,
+        fc_hidden_size: int,
+        *,
+        pretrained: bool = False,
     ):
         """Initializes the train ego-path detection model for the classification method.
 
         Args:
             backbone (str): Backbone to use in the model (e.g. "resnet18", "efficientnet-b3", etc.).
             input_shape (tuple): Input shape (C, H, W).
-            anchors (int): Number of horizontal anchors in the input image where the path is classified.
+            anchors (int): Number of vertical anchors in the input image where the path is classified.
             classes (int): Number of classes (grid cells) for each anchor. Background class is not included.
             pool_channels (int): Number of output channels of the pooling layer.
             fc_hidden_size (int): Number of units in the hidden layer of the fully connected part.
@@ -57,25 +60,26 @@ class ClassificationNet(nn.Module):
         x = self.backbone(x)[0]
         fea = self.pool(x).flatten(start_dim=1)
         clf = self.fc(fea)
-        return clf
+        return clf  # noqa: RET504
 
 
 class RegressionNet(nn.Module):
     def __init__(
         self,
-        backbone,
-        input_shape,
-        anchors,
-        pool_channels,
-        fc_hidden_size,
-        pretrained=False,
+        backbone: str,
+        input_shape: tuple[int, int, int],
+        anchors: int,
+        pool_channels: int,
+        fc_hidden_size: int,
+        *,
+        pretrained: bool = False,
     ):
         """Initializes the train ego-path detection model for the regression method.
 
         Args:
             backbone (str): Backbone to use in the model (e.g. "resnet18", "efficientnet-b3", etc.).
             input_shape (tuple): Input shape (C, H, W).
-            anchors (int): Number of horizontal anchors in the input image where the path is regressed.
+            anchors (int): Number of vertical anchors in the input image where the path is regressed.
             pool_channels (int): Number of output channels of the pooling layer.
             fc_hidden_size (int): Number of units in the hidden layer of the fully connected part.
             pretrained (bool, optional): Whether to use pretrained weights for the backbone. Defaults to False.
@@ -89,11 +93,13 @@ class RegressionNet(nn.Module):
             self.backbone = ResNetBackbone(version=backbone[6:], pretrained=pretrained)
         else:
             raise NotImplementedError
+
         self.pool = nn.Conv2d(
             in_channels=self.backbone.out_channels[-1],
             out_channels=pool_channels,
             kernel_size=1,
         )  # stride=1, padding=0
+
         self.fc = nn.Sequential(
             nn.Linear(
                 pool_channels

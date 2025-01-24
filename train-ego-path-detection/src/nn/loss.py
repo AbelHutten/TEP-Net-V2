@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import torch
 import torch.nn as nn
+import torch.nn.functional as F  # noqa: N812
+from torch.distributions import Normal
 
 
 class CrossEntropyLoss(nn.Module):
@@ -112,7 +116,6 @@ class Mean1DGIoULoss(nn.Module):
     def __init__(self):
         super().__init__()
         self.batchaveraged_smae = nn.SmoothL1Loss(reduction="mean", beta=0.015)
-        self.ylim_loss_weight = 0.5
 
     def forward(self, prediction, target):
         traj_target, ylim_target = target
@@ -136,6 +139,5 @@ class Mean1DGIoULoss(nn.Module):
         return (
             1
             - giou.mean()
-            + self.ylim_loss_weight
-            * self.batchaveraged_smae(torch.sigmoid(ylim_prediction), ylim_target)
+            + self.batchaveraged_smae(torch.sigmoid(ylim_prediction), ylim_target)
         )
