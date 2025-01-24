@@ -30,6 +30,9 @@ class Detector:
                 - If None, no cropping is performed.
             runtime (str): Runtime to use for model inference ("pytorch" or "tensorrt").
             device (str): Device to use for model inference ("cpu", "cuda", "cuda:x" or "mps").
+
+        Raises:
+            ValueError: the selected runtime was neither pytorch nor tensorrt.
         """
         self.model_path = model_path
         self.runtime = runtime
@@ -110,7 +113,7 @@ class Detector:
             engine = runtime.deserialize_cuda_engine(f.read())
         exectx = engine.create_execution_context()
         shapes = tuple(
-            [tuple(engine.get_binding_shape(i)) for i in range(engine.num_bindings)]
+            tuple(engine.get_binding_shape(i)) for i in range(engine.num_bindings)
         )
         bindings = [
             self.cuda.mem_alloc(np.prod(shape).item() * np.dtype(np.float32).itemsize)
@@ -145,12 +148,10 @@ class Detector:
         return pred.cpu().numpy()
 
     def infer_model_tensorrt(self, img):
-        tensor = transforms.Compose(
-            [
-                to_scaled_tensor,
-                transforms.Resize(self.config["input_shape"][1:][::-1]),
-            ]
-        )(img).contiguous()
+        tensor = transforms.Compose([
+            to_scaled_tensor,
+            transforms.Resize(self.config["input_shape"][1:][::-1]),
+        ])(img).contiguous()
         tensor = tensor.numpy()  # convert to numpy
         self.cuda.memcpy_htod(self.bindings[0], tensor)  # copy input to GPU
         self.exectx.execute_v2(self.bindings)  # infer model
@@ -168,7 +169,8 @@ class Detector:
             list or PIL.Image.Image: Train ego-path detection result, whose type depends on the method used:
                 - Classification/Regression: List containing the left and right rails lists of rails point coordinates (x, y).
                 - Segmentation: PIL.Image.Image representing the binary mask of detected region.
-        """     
+        """  # noqa: E501
+        confidences = None
         original_shape = img.size
         crop_coords = self.get_crop_coords()
         if crop_coords is not None:
@@ -182,6 +184,9 @@ class Detector:
 
         if self.config["method"] == "classification":
             clf = pred.reshape(2, self.config["anchors"], self.config["classes"] + 1)
+            probs = torch.softmax(torch.tensor(clf), dim=2)
+            entropies = torch.distributions.Categorical(probs=probs).entropy()
+            confidences = 1 - (entropies / np.log(self.config["classes"] + 1))
             clf = np.argmax(clf, axis=2)
             rails = classifications_to_rails(clf, self.config["classes"])
             rails = scale_rails(rails, crop_coords, original_shape)
@@ -203,4 +208,4 @@ class Detector:
         if isinstance(self.crop_coords, Autocropper):
             self.crop_coords.update(original_shape, res)
 
-        return res
+        return res, confidences

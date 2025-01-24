@@ -53,12 +53,10 @@ class PathsDataset(Dataset):
         )
 
         self.to_tensor = (
-            transforms.Compose(
-                [
-                    to_scaled_tensor,
-                    transforms.Resize(self.config["input_shape"][1:][::-1]),
-                ]
-            )
+            transforms.Compose([
+                to_scaled_tensor,
+                transforms.Resize(self.config["input_shape"][1:][::-1]),
+            ])
             if to_tensor
             else None
         )
@@ -83,12 +81,12 @@ class PathsDataset(Dataset):
                 path_gt = torch.from_numpy(path_gt)
                 ylim_gt = torch.tensor(ylim_gt)
             return img, path_gt, ylim_gt
-        elif self.method == "classification":
+        if self.method == "classification":
             path_gt = self.generate_target_classification(rails_mask)
             if self.to_tensor:
                 path_gt = torch.from_numpy(path_gt)
             return img, path_gt
-        elif self.method == "segmentation":
+        if self.method == "segmentation":
             segmentation = self.generate_target_segmentation(rails_mask)
             if self.to_tensor:
                 segmentation = segmentation.resize(
@@ -96,6 +94,7 @@ class PathsDataset(Dataset):
                 )
                 segmentation = to_scaled_tensor(segmentation)
             return img, segmentation
+        return None
 
     def generate_rails_mask(self, shape, annotation):
         rails_mask = Image.new("L", shape, 0)
@@ -153,9 +152,12 @@ class PathsDataset(Dataset):
         random_crop_top = max(random_crop_top, 0)
         random_crop_top = min(random_crop_top, img.height - 2)  # at least 2 rows
         # crop image and mask
-        img = img.crop(
-            (random_crop_left, random_crop_top, random_crop_right + 1, img.height)
-        )
+        img = img.crop((
+            random_crop_left,
+            random_crop_top,
+            random_crop_right + 1,
+            img.height,
+        ))
         rails_mask = rails_mask[
             random_crop_top:, random_crop_left : random_crop_right + 1
         ]

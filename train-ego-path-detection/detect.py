@@ -7,13 +7,12 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-
 from src.utils.common import simple_logger
 from src.utils.interface import Detector
 from src.utils.visualization import draw_egopath
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Ego-Path Detection Inference Script")
     parser.add_argument(
         "model",
@@ -29,25 +28,31 @@ def parse_arguments():
         "--output",
         type=str,
         default=None,
-        help="Path to the destination directory for the output file. If not specified, the output is saved in the same directory as the input file.",
+        help="Path to the destination directory for the output file."
+        " If not specified, the output is saved in the same directory as"
+        " the input file.",
     )
     parser.add_argument(
         "--crop",
         type=str,
         default="auto",
-        help="Coordinates to use for cropping the input image or video ('auto' for automatic cropping, 'x_left,y_top,x_right,y_bottom' inclusive absolute coordinates for manual cropping, or 'none' to disable cropping).",
+        help="Coordinates to use for cropping the input image or video ('auto'"
+        " for automatic cropping, 'x_left,y_top,x_right,y_bottom' inclusive absolute"
+        " coordinates for manual cropping, or 'none' to disable cropping).",
     )
     parser.add_argument(
         "--start",
         type=int,
         default=0,
-        help="Inference starting point in the input video in seconds. If not specified, starts from the beginning.",
+        help="Inference starting point in the input video in seconds."
+        " If not specified, starts from the beginning.",
     )
     parser.add_argument(
         "--end",
         type=int,
         default=None,
-        help="Inference ending point in the input video in seconds. If not specified, processes the video until the end.",
+        help="Inference ending point in the input video in seconds."
+        " If not specified, processes the video until the end.",
     )
     parser.add_argument(
         "--show-crop",
@@ -62,11 +67,16 @@ def parse_arguments():
         + [f"cuda:{x}" for x in range(torch.cuda.device_count())],
         help="Device to use ('cpu', 'cuda', 'cuda:x' or 'mps').",
     )
+    parser.add_argument(
+        "--show-conf",
+        action="store_true",
+        help="If enabled, show the display the confidence of the prediction",
+    )
 
     return parser.parse_args()
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     logger = simple_logger(__name__, "info")
     base_path = os.path.dirname(__file__)
     # Parse crop coordinates
@@ -98,8 +108,14 @@ def main(args):
         frame = Image.open(args.input)
         for _ in range(50 if crop_coords == "auto" else 1):
             crop = detector.get_crop_coords() if args.show_crop else None
-            res = detector.detect(frame)
-        draw_egopath(frame, res, crop_coords=crop).save(output_path)
+            res, conf = detector.detect(frame)
+        draw_egopath(
+            frame,
+            res,
+            crop_coords=crop,
+            confidences=conf,
+            visualize_conf=args.show_conf,
+        ).save(output_path)
 
     elif extension in [".mp4", ".avi"]:
         cap = cv2.VideoCapture(args.input)
@@ -117,8 +133,8 @@ def main(args):
         current_frame = 0
         logger.info(
             f"\nFRAMES: {total_frames}"
-            + f" | RESOLUTION: {frame_width}x{frame_height}"
-            + f" | FPS: {fps}"
+            f" | RESOLUTION: {frame_width}x{frame_height}"
+            f" | FPS: {fps}"
         )
         progress_bar = simple_logger(f"{__name__}_progress", "info", terminator="\r")
         while current_frame < max_frames:
@@ -127,14 +143,20 @@ def main(args):
                 break
             frame = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             crop = detector.get_crop_coords() if args.show_crop else None
-            res = detector.detect(frame)
-            vis = draw_egopath(frame, res, crop_coords=crop)
+            res, conf = detector.detect(frame)
+            vis = draw_egopath(
+                frame,
+                res,
+                crop_coords=crop,
+                confidences=conf,
+                visualize_conf=args.show_conf,
+            )
             vis = cv2.cvtColor(np.array(vis), cv2.COLOR_RGB2BGR)
             out.write(vis)
             current_frame += 1
             progress_bar.info(
                 f"Processed {current_frame:0{len(str(max_frames))}}/{max_frames} frames"
-                + f" ({current_frame/max_frames*100:.2f}%)"
+                f" ({current_frame / max_frames * 100:.2f}%)"
             )
         cap.release()
         out.release()
