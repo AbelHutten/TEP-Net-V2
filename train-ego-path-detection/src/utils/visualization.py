@@ -25,6 +25,7 @@ def draw_egopath(
     color: tuple[int, int, int] = (0, 189, 80),
     crop_coords: tuple[int, int, int, int] | None = None,
     confidences=None,
+    visualize_conf=False,
 ) -> Image.Image:
     """Overlays the train ego-path on the input image.
 
@@ -42,6 +43,7 @@ def draw_egopath(
         PIL.Image.Image: Image with the ego-path overlay.o
     """
     vis = img.copy()
+    show_conf = confidences is not None and visualize_conf
     if isinstance(egopath, list):  # classification/regression
         left_rail, right_rail = egopath
         if not left_rail or not right_rail:
@@ -61,8 +63,9 @@ def draw_egopath(
                 right_rail[i],
             ]
             # Compute the color for this confidence value
-            confidence = confidences[i]
-            color = confidence_to_color(confidence)
+            if show_conf:
+                confidence = confidences[i]
+                color = confidence_to_color(confidence)
             color_with_opacity = (*color, int(255 * opacity))
 
             # Draw the polygon for this segment
@@ -78,7 +81,7 @@ def draw_egopath(
     if crop_coords is not None:
         draw = ImageDraw.Draw(vis)
         draw.rectangle(crop_coords, outline=(255, 0, 0), width=1)
-    if confidences is not None:
+    if confidences is not None and visualize_conf is True:
         draw = ImageDraw.Draw(vis)
         font = ImageFont.truetype(
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60

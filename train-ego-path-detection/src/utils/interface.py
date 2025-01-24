@@ -30,6 +30,9 @@ class Detector:
                 - If None, no cropping is performed.
             runtime (str): Runtime to use for model inference ("pytorch" or "tensorrt").
             device (str): Device to use for model inference ("cpu", "cuda", "cuda:x" or "mps").
+
+        Raises:
+            ValueError: the selected runtime was neither pytorch nor tensorrt.
         """
         self.model_path = model_path
         self.runtime = runtime
@@ -109,9 +112,9 @@ class Detector:
         with open(os.path.join(self.model_path, "best.trt"), "rb") as f:
             engine = runtime.deserialize_cuda_engine(f.read())
         exectx = engine.create_execution_context()
-        shapes = tuple([
+        shapes = tuple(
             tuple(engine.get_binding_shape(i)) for i in range(engine.num_bindings)
-        ])
+        )
         bindings = [
             self.cuda.mem_alloc(np.prod(shape).item() * np.dtype(np.float32).itemsize)
             for shape in shapes
@@ -166,7 +169,7 @@ class Detector:
             list or PIL.Image.Image: Train ego-path detection result, whose type depends on the method used:
                 - Classification/Regression: List containing the left and right rails lists of rails point coordinates (x, y).
                 - Segmentation: PIL.Image.Image representing the binary mask of detected region.
-        """
+        """  # noqa: E501
         confidences = None
         original_shape = img.size
         crop_coords = self.get_crop_coords()

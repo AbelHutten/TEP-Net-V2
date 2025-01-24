@@ -67,6 +67,11 @@ def parse_arguments() -> argparse.Namespace:
         + [f"cuda:{x}" for x in range(torch.cuda.device_count())],
         help="Device to use ('cpu', 'cuda', 'cuda:x' or 'mps').",
     )
+    parser.add_argument(
+        "--show-conf",
+        action="store_true",
+        help="If enabled, show the display the confidence of the prediction",
+    )
 
     return parser.parse_args()
 
@@ -103,8 +108,14 @@ def main(args: argparse.Namespace) -> None:
         frame = Image.open(args.input)
         for _ in range(50 if crop_coords == "auto" else 1):
             crop = detector.get_crop_coords() if args.show_crop else None
-            res = detector.detect(frame)
-        draw_egopath(frame, res, crop_coords=crop).save(output_path)
+            res, conf = detector.detect(frame)
+        draw_egopath(
+            frame,
+            res,
+            crop_coords=crop,
+            confidences=conf,
+            visualize_conf=args.show_conf,
+        ).save(output_path)
 
     elif extension in [".mp4", ".avi"]:
         cap = cv2.VideoCapture(args.input)
@@ -133,7 +144,13 @@ def main(args: argparse.Namespace) -> None:
             frame = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             crop = detector.get_crop_coords() if args.show_crop else None
             res, conf = detector.detect(frame)
-            vis = draw_egopath(frame, res, crop_coords=crop, confidences=conf)
+            vis = draw_egopath(
+                frame,
+                res,
+                crop_coords=crop,
+                confidences=conf,
+                visualize_conf=args.show_conf,
+            )
             vis = cv2.cvtColor(np.array(vis), cv2.COLOR_RGB2BGR)
             out.write(vis)
             current_frame += 1
