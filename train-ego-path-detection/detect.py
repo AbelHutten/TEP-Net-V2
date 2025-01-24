@@ -12,7 +12,7 @@ from src.utils.interface import Detector
 from src.utils.visualization import draw_egopath
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Ego-Path Detection Inference Script")
     parser.add_argument(
         "model",
@@ -28,25 +28,31 @@ def parse_arguments():
         "--output",
         type=str,
         default=None,
-        help="Path to the destination directory for the output file. If not specified, the output is saved in the same directory as the input file.",
+        help="Path to the destination directory for the output file."
+        " If not specified, the output is saved in the same directory as"
+        " the input file.",
     )
     parser.add_argument(
         "--crop",
         type=str,
         default="auto",
-        help="Coordinates to use for cropping the input image or video ('auto' for automatic cropping, 'x_left,y_top,x_right,y_bottom' inclusive absolute coordinates for manual cropping, or 'none' to disable cropping).",
+        help="Coordinates to use for cropping the input image or video ('auto'"
+        " for automatic cropping, 'x_left,y_top,x_right,y_bottom' inclusive absolute"
+        " coordinates for manual cropping, or 'none' to disable cropping).",
     )
     parser.add_argument(
         "--start",
         type=int,
         default=0,
-        help="Inference starting point in the input video in seconds. If not specified, starts from the beginning.",
+        help="Inference starting point in the input video in seconds."
+        " If not specified, starts from the beginning.",
     )
     parser.add_argument(
         "--end",
         type=int,
         default=None,
-        help="Inference ending point in the input video in seconds. If not specified, processes the video until the end.",
+        help="Inference ending point in the input video in seconds."
+        " If not specified, processes the video until the end.",
     )
     parser.add_argument(
         "--show-crop",
@@ -65,7 +71,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     logger = simple_logger(__name__, "info")
     base_path = os.path.dirname(__file__)
     # Parse crop coordinates
@@ -126,8 +132,8 @@ def main(args):
                 break
             frame = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             crop = detector.get_crop_coords() if args.show_crop else None
-            res = detector.detect(frame)
-            vis = draw_egopath(frame, res, crop_coords=crop)
+            res, conf = detector.detect(frame)
+            vis = draw_egopath(frame, res, crop_coords=crop, confidences=conf)
             vis = cv2.cvtColor(np.array(vis), cv2.COLOR_RGB2BGR)
             out.write(vis)
             current_frame += 1

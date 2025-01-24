@@ -167,6 +167,7 @@ class Detector:
                 - Classification/Regression: List containing the left and right rails lists of rails point coordinates (x, y).
                 - Segmentation: PIL.Image.Image representing the binary mask of detected region.
         """
+        confidences = None
         original_shape = img.size
         crop_coords = self.get_crop_coords()
         if crop_coords is not None:
@@ -180,6 +181,9 @@ class Detector:
 
         if self.config["method"] == "classification":
             clf = pred.reshape(2, self.config["anchors"], self.config["classes"] + 1)
+            probs = torch.softmax(torch.tensor(clf), dim=2)
+            entropies = torch.distributions.Categorical(probs=probs).entropy()
+            confidences = 1 - (entropies / np.log(self.config["classes"] + 1))
             clf = np.argmax(clf, axis=2)
             rails = classifications_to_rails(clf, self.config["classes"])
             rails = scale_rails(rails, crop_coords, original_shape)
@@ -201,4 +205,4 @@ class Detector:
         if isinstance(self.crop_coords, Autocropper):
             self.crop_coords.update(original_shape, res)
 
-        return res
+        return res, confidences
