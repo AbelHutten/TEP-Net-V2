@@ -20,6 +20,9 @@ tensorrt,resnet34,amx,segmentation,twilight-voice-25,0.64,0.97587
 tensorrt,resnet50,amx,classification,autumn-galaxy-20,0.57,0.96279
 tensorrt,resnet50,amx,regression,classic-cosmos-13,0.52,0.97209
 tensorrt,resnet50,amx,segmentation,pious-field-26,0.85,0.97313
+tensorrt,efficientnet-v2-l,amx,regression,grateful-star-100,2.44,0.97720
+tensorrt,efficientnet-v2-m,amx,regression,easy-armadillo-99,1.62,0.97626
+tensorrt,efficientnet-v2-s,amx,regression,deep-dawn-98,1.11,0.97618
 pytorch,efficientnet-b0,fp32,classification,rural-brook-21,2.36,0.96476
 pytorch,efficientnet-b0,fp32,regression,sweet-pond-14,2.35,0.97240
 pytorch,efficientnet-b0,fp32,segmentation,grateful-bush-27,2.66,0.97520
@@ -41,3 +44,6 @@ pytorch,resnet34,fp32,segmentation,twilight-voice-25,2.17,0.97587
 pytorch,resnet50,fp32,classification,autumn-galaxy-20,1.90,0.96281
 pytorch,resnet50,fp32,regression,classic-cosmos-13,1.72,0.97245
 pytorch,resnet50,fp32,segmentation,pious-field-26,3.10,0.97313
+pytorch,efficientnet-v2-l,fp32,regression,grateful-star-100,10.67,0.97735
+pytorch,efficientnet-v2-m,fp32,regression,easy-armadillo-99,7.97,0.97676
+pytorch,efficientnet-v2-s,fp32,regression,deep-dawn-98,5.21,0.97631
